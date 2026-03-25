@@ -23,5 +23,5 @@ Deployments are handled automatically by GitHub Actions on pushes to `main`.
 The published site URL is:
 
 ```text
-https://pr0y.github.io/genesis-docs/
+https://genesis-studio-labs.github.io/genesis-docs/
 ```
