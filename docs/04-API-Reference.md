@@ -506,6 +506,52 @@ Returns singleton content pages.
 
 ---
 
+### GET `/api/directus/contactus`
+
+Returns contact information from the `contactus` singleton in Directus.
+
+**Auth required:** No
+
+**Response:**
+
+```json
+{
+  "business_mail": "business@genesistudio.com",
+  "business_body": "For business inquiries...",
+  "support_mail": "support@genesistudio.com",
+  "support_body": "For support requests...",
+  "jobs_mail": "jobs@genesistudio.com",
+  "jobs_body": "For job applications..."
+}
+```
+
+**Cache:** static | **Errors:** 500
+
+---
+
+### GET `/api/directus/faq`
+
+Returns all FAQ items sorted by category.
+
+**Auth required:** No
+
+**Response:**
+
+```json
+[
+  {
+    "id": 1,
+    "category": "Account",
+    "question": "How do I reset my password?",
+    "answer": "You can reset your password from..."
+  }
+]
+```
+
+**Cache:** static | **Errors:** 500
+
+---
+
 ### GET `/api/directus/user-profile/[id]`
 
 Returns user profile data from Directus.
@@ -1299,15 +1345,141 @@ Returns the user's achievements and progress.
 
 ---
 
-### GET `/api/profile/stats`
+### GET `/api/profile`
 
-Returns the user's reading statistics.
+Returns the authenticated user's profile from `user_profiles`.
 
 **Auth required:** Yes
 
-**Response:** Reading stats (chapters read, time spent, etc.).
+**Response:** `UserProfile` object with all profile fields.
 
 **Cache:** user | **Errors:** 401, 500
+
+---
+
+### PUT `/api/profile`
+
+Updates profile fields for the authenticated user.
+
+**Auth required:** Yes
+
+**Request body:** Accepts any combination of: `display_name`, `username`, `birthday`, `gender`, `profile_picture`.
+
+Username validation: lowercase, alphanumeric + underscores only, uniqueness check (case-insensitive).
+
+**Response:** Updated `UserProfile` object.
+
+**Errors:** 400 (validation failure / username taken), 401, 500
+
+---
+
+### GET `/api/profile/check-username`
+
+Checks username availability (case-insensitive).
+
+**Auth required:** Yes
+
+**Query parameters:** `username` — the username to check
+
+**Response:**
+
+```json
+{ "available": true }
+```
+
+**Errors:** 400 (missing username), 401, 500
+
+---
+
+### GET `/api/profile/stats`
+
+Returns the user's reading statistics and engagement summary.
+
+**Auth required:** Yes
+
+**Response:**
+
+```json
+{
+  "chaptersRead": 142,
+  "favoritedNovels": 8,
+  "comments": 37,
+  "streak": 12,
+  "level": 5,
+  "isLuminary": true
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `chaptersRead` | Total chapters read |
+| `favoritedNovels` | Number of bookmarked novels |
+| `comments` | Total comments posted |
+| `streak` | Consecutive reading days |
+| `level` | Derived from lifetime shards |
+| `isLuminary` | Whether user has an active subscription |
+
+**Cache:** user | **Errors:** 401, 500
+
+---
+
+### POST `/api/billing/portal/stripe`
+
+Creates a Stripe Customer Portal session for subscription and payment management.
+
+**Auth required:** Yes
+
+**Response:**
+
+```json
+{ "url": "https://billing.stripe.com/p/session/..." }
+```
+
+The returned URL is used for client-side redirect to the Stripe-hosted portal.
+
+**Errors:** 401, 500
+
+---
+
+### GET `/api/billing/subscriptions/paypal`
+
+Lists the user's PayPal subscriptions with associated novel titles and management URLs.
+
+**Auth required:** Yes
+
+**Response:** Array of PayPal subscription objects with novel details and PayPal management links.
+
+**Cache:** user | **Errors:** 401, 500
+
+---
+
+### GET `/api/auth/devices`
+
+Lists active sessions for the authenticated user via the `get_user_sessions` RPC function. Parses `user_agent` strings into structured browser, OS, and device information. Flags the current session.
+
+**Auth required:** Yes
+
+**Response:** Array of session objects with parsed device info and `isCurrent` flag.
+
+**Cache:** user | **Errors:** 401, 500
+
+---
+
+### DELETE `/api/auth/devices`
+
+Revokes a specific auth session via the `delete_user_session` RPC function.
+
+**Auth required:** Yes
+
+**Request body:**
+
+```json
+{ "sessionId": "session-uuid" }
+```
+
+**Response:** `{ "success": true }`
+
+**Errors:** 400 (missing sessionId), 401, 500
 
 ---
 
@@ -1657,43 +1829,52 @@ Error responses always include `Cache-Control: no-cache, no-store, must-revalida
 | 14 | GET | `/api/directus/community-banner` | No | static |
 | 15 | GET | `/api/directus/event-banners` | No | dynamic |
 | 16 | GET | `/api/directus/content/[type]` | No | dynamic |
-| 17 | GET | `/api/directus/user-profile/[id]` | Yes | user |
-| 18 | GET | `/api/directus-file/[id]` | No | 5min |
-| 19 | GET | `/api/chapters/recent` | No | dynamic |
-| 20 | GET | `/api/chapters/recently-freed` | No | dynamic |
-| 21 | GET | `/api/chapters/[id]/content` | Conditional | user |
-| 22 | POST | `/api/chapters/unlock` | Yes | — |
-| 23 | GET | `/api/novels-chapter/[id]` | No | dynamic |
-| 24 | GET | `/api/novels-chapter/recent` | No | dynamic |
-| 25 | POST | `/api/create-payment-intent` | No | — |
-| 26 | POST | `/api/create-helix-payment-intent` | No | — |
-| 27 | POST | `/api/create-subscription` | No | — |
-| 28 | POST | `/api/create-novel-subscription` | Yes | — |
-| 29 | GET/POST | `/api/novel-subscription` | Yes | — |
-| 30 | POST | `/api/webhooks/stripe` | Stripe sig | — |
-| 31 | POST | `/api/webhooks/paypal` | PayPal sig | — |
-| 32 | GET | `/api/bookmark` | Yes | user |
-| 33 | POST | `/api/bookmark` | Yes | — |
-| 34 | GET | `/api/bookmark/count` | No | dynamic |
-| 35 | GET | `/api/wallet/balance` | Yes | user |
-| 36 | POST | `/api/wallet/balance` | Yes | — |
-| 37 | GET | `/api/subscriptions` | Yes | user |
-| 38 | GET | `/api/unlocked/chapters` | Yes | user |
-| 39 | GET | `/api/unlocked/subscriptions` | Yes | user |
-| 40 | GET | `/api/transactions` | Yes | user |
-| 41 | GET | `/api/transactions/summary` | Yes | user |
-| 42 | GET | `/api/singularity` | Yes | user |
-| 43 | POST | `/api/singularity` | Yes | — |
-| 44 | GET | `/api/singularity/count` | No | dynamic |
-| 45 | GET | `/api/singularity/rankings` | No | dynamic |
-| 46 | GET | `/api/profile/achievements` | Yes | user |
-| 47 | GET | `/api/profile/stats` | Yes | user |
-| 48 | GET | `/api/comments` | No | realtime |
-| 49 | POST | `/api/comments` | Yes | — |
-| 50 | PATCH | `/api/comments/[commentId]` | Yes | — |
-| 51 | POST | `/api/comments/[commentId]/vote` | Yes | — |
-| 52 | GET | `/api/comments/[commentId]/replies` | No | realtime |
-| 53 | DELETE | `/api/comments/[commentId]` | Yes | — |
-| 54 | POST | `/api/comments/[commentId]/report` | Yes | — |
-| 55 | POST | `/api/extract-colors` | No | — |
-| 56 | POST | `/api/test/add-helix` | Dev | — |
+| 17 | GET | `/api/directus/contactus` | No | static |
+| 18 | GET | `/api/directus/faq` | No | static |
+| 19 | GET | `/api/directus/user-profile/[id]` | Yes | user |
+| 20 | GET | `/api/directus-file/[id]` | No | 5min |
+| 21 | GET | `/api/chapters/recent` | No | dynamic |
+| 22 | GET | `/api/chapters/recently-freed` | No | dynamic |
+| 23 | GET | `/api/chapters/[id]/content` | Conditional | user |
+| 24 | POST | `/api/chapters/unlock` | Yes | — |
+| 25 | GET | `/api/novels-chapter/[id]` | No | dynamic |
+| 26 | GET | `/api/novels-chapter/recent` | No | dynamic |
+| 27 | POST | `/api/create-payment-intent` | No | — |
+| 28 | POST | `/api/create-helix-payment-intent` | No | — |
+| 29 | POST | `/api/create-subscription` | No | — |
+| 30 | POST | `/api/create-novel-subscription` | Yes | — |
+| 31 | GET/POST | `/api/novel-subscription` | Yes | — |
+| 32 | POST | `/api/webhooks/stripe` | Stripe sig | — |
+| 33 | POST | `/api/webhooks/paypal` | PayPal sig | — |
+| 34 | GET | `/api/bookmark` | Yes | user |
+| 35 | POST | `/api/bookmark` | Yes | — |
+| 36 | GET | `/api/bookmark/count` | No | dynamic |
+| 37 | GET | `/api/wallet/balance` | Yes | user |
+| 38 | POST | `/api/wallet/balance` | Yes | — |
+| 39 | GET | `/api/subscriptions` | Yes | user |
+| 40 | GET | `/api/unlocked/chapters` | Yes | user |
+| 41 | GET | `/api/unlocked/subscriptions` | Yes | user |
+| 42 | GET | `/api/transactions` | Yes | user |
+| 43 | GET | `/api/transactions/summary` | Yes | user |
+| 44 | GET | `/api/singularity` | Yes | user |
+| 45 | POST | `/api/singularity` | Yes | — |
+| 46 | GET | `/api/singularity/count` | No | dynamic |
+| 47 | GET | `/api/singularity/rankings` | No | dynamic |
+| 48 | GET | `/api/profile` | Yes | user |
+| 49 | PUT | `/api/profile` | Yes | — |
+| 50 | GET | `/api/profile/check-username` | Yes | — |
+| 51 | GET | `/api/profile/achievements` | Yes | user |
+| 52 | GET | `/api/profile/stats` | Yes | user |
+| 53 | POST | `/api/billing/portal/stripe` | Yes | — |
+| 54 | GET | `/api/billing/subscriptions/paypal` | Yes | user |
+| 55 | GET | `/api/auth/devices` | Yes | user |
+| 56 | DELETE | `/api/auth/devices` | Yes | — |
+| 57 | GET | `/api/comments` | No | realtime |
+| 58 | POST | `/api/comments` | Yes | — |
+| 59 | PATCH | `/api/comments/[commentId]` | Yes | — |
+| 60 | POST | `/api/comments/[commentId]/vote` | Yes | — |
+| 61 | GET | `/api/comments/[commentId]/replies` | No | realtime |
+| 62 | DELETE | `/api/comments/[commentId]` | Yes | — |
+| 63 | POST | `/api/comments/[commentId]/report` | Yes | — |
+| 64 | POST | `/api/extract-colors` | No | — |
+| 65 | POST | `/api/test/add-helix` | Dev | — |

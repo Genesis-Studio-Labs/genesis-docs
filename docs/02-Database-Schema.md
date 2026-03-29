@@ -288,7 +288,10 @@ Extended user profile data, linked to Supabase Auth users.
 |---|---|---|---|
 | `id` | `varchar` | **PK** | Matches `auth.users.id` |
 | `profile_picture` | `varchar` | | Avatar URL |
-| `username` | `varchar` | | Display name |
+| `username` | `varchar` | **UNIQUE** | Login/handle name (unique, enforced at DB level) |
+| `display_name` | `text` | | User's display name (shown as primary name, falls back to username) |
+| `gender` | `text` | | Gender (male, female, other) |
+| `birthday` | `date` | | Date of birth |
 | `bio` | `text` | | User biography |
 | `chapter_releases` | `boolean` | | Notification preference: chapter releases |
 | `replies` | `boolean` | | Notification preference: replies |
@@ -305,6 +308,19 @@ Extended user profile data, linked to Supabase Auth users.
 | `date_updated` | `timestamp` | | Last record update time |
 
 **Relation:** `user_profiles.id` → `auth.users.id`
+
+> **Note:** The `username` column has a UNIQUE constraint enforced at the database level. Username uniqueness checks are case-insensitive in the application layer.
+
+---
+
+### Database Functions (RPC)
+
+| Function | Parameters | Returns | Purpose |
+|---|---|---|---|
+| `get_user_sessions(p_user_id uuid)` | User UUID | Sessions table rows | Lists active auth sessions for device management |
+| `delete_user_session(p_user_id uuid, p_session_id uuid)` | User UUID + Session UUID | boolean | Revokes a specific auth session |
+
+Both functions use `SECURITY DEFINER` to access the `auth.sessions` table which isn't exposed via PostgREST.
 
 ---
 

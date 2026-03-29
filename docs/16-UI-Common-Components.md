@@ -16,7 +16,7 @@ sidebar_label: "UI: Common Components"
 - [Root Layout](#root-layout)
 - [Navbar](#navbar)
 - [Footer](#footer)
-- [ProfileModal](#profilemodal)
+- [ProfileModal (Replaced)](#profilemodal-replaced)
 - [LoginModal](#loginmodal)
 - [ModalViewbox](#modalviewbox)
 - [Toast](#toast)
@@ -149,13 +149,15 @@ The Navbar auto-hides on scroll down and reappears on scroll up:
 
 **Authenticated state:**
 - Displays the user's avatar image (from `user.profile.profile_picture`)
-- Click opens `ProfileModal` (desktop dropdown)
+- Click opens `SettingsDropdown` (desktop) — replaces the former `ProfileModal`
 
 **Unauthenticated state:**
 - Displays a generic user icon
 - Click opens `LoginModal`
 
 ### Mobile Drawer
+
+> **Note:** The mobile drawer has been extracted to `SettingsDrawer` (`src/app/components/settings/SettingsDrawer.tsx`). See [20 — Settings & Profile](./20-UI-Settings-Profile.md) for full documentation.
 
 A right-sliding frosted-glass panel animated with Framer Motion (`x: 100%` → `0`):
 
@@ -207,31 +209,17 @@ Each icon has both light and dark theme variants loaded from the `/footer/` dire
 
 ---
 
-## ProfileModal
+## ProfileModal (Replaced)
 
-**File:** `src/app/components/common/ProfileModal.tsx`
+**Original file:** `src/app/components/common/ProfileModal.tsx`
 
-Desktop dropdown/popover anchored below the profile avatar button in the Navbar.
+> **Status:** ProfileModal has been **replaced** by `SettingsDropdown` (`src/app/components/settings/SettingsDropdown.tsx`). The mobile variant has been extracted to `SettingsDrawer` (`src/app/components/settings/SettingsDrawer.tsx`).
+>
+> See [20 — Settings & Profile](./20-UI-Settings-Profile.md) for complete documentation of the settings system.
 
-### Animation
+The original ProfileModal was a desktop dropdown/popover anchored below the profile avatar button in the Navbar. Its functionality (profile display, wallet, billing, sign-out) has been absorbed into the new settings system, which provides a unified experience across desktop and mobile.
 
-- Framer Motion entrance: `scale` (0.95 → 1) + `opacity` (0 → 1)
-- Exit: reverse of entrance
-- Smooth spring transition
-
-### Sections
-
-| Section | Content |
-|---------|---------|
-| **Header** | User avatar, display name, email address |
-| **Tags** | Conditional badges: Supporter, Newcomer, Staff |
-| **Wallet** | Helix and Atom balances with icons |
-| **Billing** | Link to billing/payment history |
-| **Luminaries** | Active Luminary subscription list |
-| **Job Applications** | Job application status (if applicable) |
-| **Sign Out** | Button to end session and close modal |
-
-### Profile Sub-Components
+### Legacy Profile Sub-Components
 
 Located in `src/app/components/profile/`:
 
@@ -515,3 +503,4 @@ Located in `src/components/ui/`:
 | [06 — Payment & Subscription System](./06-Payment-Subscription-System.md) | ModalViewbox payment flows, modal content components |
 | [08 — State Management](./08-State-Management.md) | Context providers (Auth, Toast, ModalViewbox), React Query |
 | [17 — UI: Styling System](./17-UI-Styling-System.md) | Theme system, dark mode, skeleton loading, CSS architecture |
+| [20 — Settings & Profile](./20-UI-Settings-Profile.md) | SettingsDropdown, SettingsDrawer, profile management (replaces ProfileModal) |

@@ -30,6 +30,7 @@ const sidebars: SidebarsConfig = {
         '15-UI-Library',
         '16-UI-Common-Components',
         '17-UI-Styling-System',
+        '20-UI-Settings-Profile',
       ],
     },
     {
